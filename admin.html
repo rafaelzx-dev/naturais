@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Pedidos — Cantinho das Essências</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sage: #7A9E7E;
+    --sage-dark: #5F7D62;
+    --charcoal: #3D3D3D;
+    --linen: #F5F0EB;
+    --paper: #FAF8F5;
+    --shadow: rgba(61,61,61,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--paper); color:var(--charcoal); min-height:100vh; }
+
+  /* Tela de login */
+  #loginScreen {
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .login-box {
+    background:white; padding:40px 36px; border-radius:20px; box-shadow:0 20px 50px var(--shadow);
+    max-width:380px; width:100%; text-align:center;
+  }
+  .login-box h1 { font-family:'Playfair Display',serif; font-size:1.4rem; color:var(--sage-dark); margin-bottom:6px; }
+  .login-box p { font-size:0.85rem; color:#888; margin-bottom:24px; }
+  .login-box input {
+    width:100%; padding:14px 16px; border:2px solid var(--linen); border-radius:12px;
+    font-size:0.95rem; outline:none; margin-bottom:14px;
+  }
+  .login-box input:focus { border-color:var(--sage); }
+  .login-box button {
+    width:100%; padding:14px; background:var(--sage); color:white; border:none; border-radius:50px;
+    font-size:0.95rem; font-weight:500; cursor:pointer; transition:background 0.3s;
+  }
+  .login-box button:hover { background:var(--sage-dark); }
+  .login-error { color:#C0392B; font-size:0.82rem; margin-top:10px; display:none; }
+
+  /* Painel */
+  #panelScreen { display:none; }
+  header {
+    background:white; padding:20px 5%; box-shadow:0 2px 12px var(--shadow);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+  }
+  header h1 { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--sage-dark); }
+  header .actions { display:flex; gap:10px; align-items:center; }
+  header button {
+    background:transparent; border:2px solid var(--linen); padding:9px 16px; border-radius:30px;
+    font-size:0.82rem; cursor:pointer; color:var(--charcoal); font-weight:500;
+  }
+  header button:hover { border-color:var(--sage); color:var(--sage-dark); }
+
+  main { padding:30px 5% 60px; max-width:1200px; margin:0 auto; }
+
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:28px; }
+  .stat-card { background:white; padding:20px; border-radius:16px; box-shadow:0 2px 12px var(--shadow); }
+  .stat-card span { font-size:0.78rem; color:#999; text-transform:uppercase; letter-spacing:0.5px; }
+  .stat-card strong { display:block; font-size:1.5rem; font-family:'Playfair Display',serif; color:var(--charcoal); margin-top:4px; }
+
+  .filters { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .filters button {
+    background:white; border:2px solid var(--linen); padding:8px 18px; border-radius:30px;
+    font-size:0.82rem; cursor:pointer; font-weight:500; color:var(--charcoal);
+  }
+  .filters button.active { background:var(--sage); border-color:var(--sage); color:white; }
+
+  .order-card {
+    background:white; border-radius:16px; padding:20px 24px; margin-bottom:14px; box-shadow:0 2px 12px var(--shadow);
+  }
+  .order-top { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
+  .order-top strong { font-size:1.05rem; }
+  .order-top small { display:block; color:#999; font-size:0.78rem; margin-top:2px; }
+  .order-total { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--sage-dark); }
+
+  .order-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; font-size:0.85rem; color:#555; margin-bottom:14px; }
+  .order-grid h4 { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; color:#999; margin-bottom:6px; }
+  .order-items-list div { display:flex; justify-content:space-between; padding:3px 0; }
+
+  .order-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+  select.status-select {
+    padding:8px 14px; border-radius:30px; border:2px solid var(--linen); font-size:0.82rem; font-weight:500;
+    background:white; color:var(--charcoal); cursor:pointer;
+  }
+  .empty-state { text-align:center; padding:60px 20px; color:#999; }
+  .empty-state div { font-size:2.5rem; margin-bottom:12px; }
+  .loading { text-align:center; padding:40px; color:#999; }
+</style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="loginScreen">
+    <div class="login-box">
+      <h1>🌿 Painel de Pedidos</h1>
+      <p>Cantinho das Essências — acesso restrito</p>
+      <input type="password" id="adminPassword" placeholder="Senha de administrador" onkeydown="if(event.key==='Enter') login()">
+      <button onclick="login()">Entrar</button>
+      <p class="login-error" id="loginError">Senha incorreta. Tente novamente.</p>
+    </div>
+  </div>
+
+  <!-- PAINEL -->
+  <div id="panelScreen">
+    <header>
+      <h1>🌿 Pedidos — Cantinho das Essências</h1>
+      <div class="actions">
+        <button onclick="loadOrders()">↻ Atualizar</button>
+        <button onclick="logout()">Sair</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="stats" id="statsRow"></div>
+
+      <div class="filters" id="filtersRow">
+        <button data-status="todos" class="active" onclick="setFilter('todos')">Todos</button>
+        <button data-status="Pedido Recebido" onclick="setFilter('Pedido Recebido')">Recebidos</button>
+        <button data-status="Em Preparação" onclick="setFilter('Em Preparação')">Em Preparação</button>
+        <button data-status="Enviado" onclick="setFilter('Enviado')">Enviados</button>
+        <button data-status="Entregue" onclick="setFilter('Entregue')">Entregues</button>
+      </div>
+
+      <div id="ordersList"><div class="loading">Carregando pedidos...</div></div>
+    </main>
+  </div>
+
+<script>
+  let adminPassword = '';
+  let allOrders = [];
+  let currentFilter = 'todos';
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = sessionStorage.getItem('adminPassword');
+    if (saved) {
+      adminPassword = saved;
+      showPanel();
+      loadOrders();
+    }
+  });
+
+  async function login() {
+    const pass = document.getElementById('adminPassword').value;
+    adminPassword = pass;
+    const ok = await loadOrders();
+    if (ok) {
+      sessionStorage.setItem('adminPassword', pass);
+      showPanel();
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem('adminPassword');
+    adminPassword = '';
+    document.getElementById('panelScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
+
+  function showPanel() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('panelScreen').style.display = 'block';
+  }
+
+  async function loadOrders() {
+    try {
+      const res = await fetch(`/api/orders?password=${encodeURIComponent(adminPassword)}`);
+      if (!res.ok) return false;
+      const data = await res.json();
+      allOrders = data.orders || [];
+      renderStats();
+      renderOrders();
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  }
+
+  function renderStats() {
+    const total = allOrders.length;
+    const revenue = allOrders.reduce((s, o) => s + (o.total || 0), 0);
+    const pending = allOrders.filter(o => o.status === 'Pedido Recebido').length;
+    const delivered = allOrders.filter(o => o.status === 'Entregue').length;
+
+    document.getElementById('statsRow').innerHTML = `
+      <div class="stat-card"><span>Total de Pedidos</span><strong>${total}</strong></div>
+      <div class="stat-card"><span>Faturamento</span><strong>R$ ${revenue.toFixed(2).replace('.', ',')}</strong></div>
+      <div class="stat-card"><span>Aguardando Preparo</span><strong>${pending}</strong></div>
+      <div class="stat-card"><span>Entregues</span><strong>${delivered}</strong></div>
+    `;
+  }
+
+  function setFilter(status) {
+    currentFilter = status;
+    document.querySelectorAll('#filtersRow button').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-status') === status);
+    });
+    renderOrders();
+  }
+
+  function renderOrders() {
+    const list = document.getElementById('ordersList');
+    const filtered = currentFilter === 'todos' ? allOrders : allOrders.filter(o => o.status === currentFilter);
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div>📦</div><p>Nenhum pedido por aqui ainda.</p></div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(order => `
+      <div class="order-card">
+        <div class="order-top">
+          <div>
+            <strong>Pedido #${order.number}</strong>
+            <small>${new Date(order.createdAt).toLocaleString('pt-BR')}</small>
+          </div>
+          <div class="order-total">R$ ${(order.total || 0).toFixed(2).replace('.', ',')}</div>
+        </div>
+        <div class="order-grid">
+          <div>
+            <h4>Cliente</h4>
+            <p>${order.customerName || '—'}</p>
+            <p>${order.customerPhone || ''}</p>
+            <p>${order.customerEmail || ''}</p>
+          </div>
+          <div>
+            <h4>Entrega</h4>
+            <p>${order.address?.street || ''}, ${order.address?.number || ''} ${order.address?.complement ? '— ' + order.address.complement : ''}</p>
+            <p>${order.address?.neighborhood || ''} — ${order.address?.city || ''}/${order.address?.state || ''}</p>
+            <p>CEP ${order.address?.cep || ''}</p>
+          </div>
+        </div>
+        <div class="order-grid">
+          <div>
+            <h4>Itens</h4>
+            <div class="order-items-list">
+              ${(order.items || []).map(i => `<div><span>${i.qty}x ${i.name}</span><span>R$ ${(i.price * i.qty).toFixed(2).replace('.', ',')}</span></div>`).join('')}
+            </div>
+          </div>
+          <div>
+            <h4>Pagamento</h4>
+            <p>${order.paymentLabel || order.paymentMethod || '—'}</p>
+          </div>
+        </div>
+        <div class="order-bottom">
+          <select class="status-select" onchange="updateStatus('${order.id}', this.value)">
+            ${['Pedido Recebido', 'Em Preparação', 'Enviado', 'Entregue'].map(s =>
+              `<option value="${s}" ${order.status === s ? 'selected' : ''}>${s}</option>`
+            ).join('')}
+          </select>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function updateStatus(id, status) {
+    try {
+      await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status, password: adminPassword })
+      });
+      await loadOrders();
+    } catch (err) {
+      alert('Não foi possível atualizar o status. Tente novamente.');
+    }
+  }
+</script>
+</body>
+</html>
